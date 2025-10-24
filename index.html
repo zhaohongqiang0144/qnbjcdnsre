@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -13,78 +14,87 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00B8D4 0%, #0097A7 50%, #00838F 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            align-items: flex-start;
+            padding: 15px 20px 20px;
+            position: relative;
+            overflow: auto;
+        }
+
+        body::before {
+            content: '1024';
+            position: absolute;
+            font-size: 280px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.08);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            z-index: 0;
+            letter-spacing: 20px;
         }
 
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
-            padding: 40px;
+            padding: 30px 40px;
+            position: relative;
+            z-index: 1;
+            border-top: 4px solid #00B8D4;
+        }
+
+        .event-1024-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .event-1024 {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+            line-height: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            color: #00838F;
+            margin-bottom: 8px;
             font-size: 28px;
             text-align: center;
+            font-weight: 700;
         }
 
         .subtitle {
             color: #666;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 14px;
         }
 
         .input-group {
             margin-bottom: 20px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .voice-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .voice-btn:hover {
-            background: #764ba2;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .voice-btn.listening {
-            background: #dc3545;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: translateY(-50%) scale(1); }
-            50% { transform: translateY(-50%) scale(1.15); }
         }
 
         label {
@@ -145,7 +155,7 @@
         button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00B8D4 0%, #0097A7 100%);
             color: white;
             border: none;
             border-radius: 10px;
@@ -157,7 +167,7 @@
 
         button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 184, 212, 0.4);
         }
 
         button:disabled {
@@ -185,7 +195,25 @@
         .status.success {
             background: #d4edda;
             color: #155724;
-            border-left: 4px solid #28a745;
+            border-left: 4px solid #00B8D4;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: #00B8D4;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
         }
 
         .status.error {
@@ -213,10 +241,104 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+        }
+
+        .voice-btn {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+            margin-top: 0;
+        }
+
+        .voice-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .voice-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .voice-btn.listening {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            animation: pulse-voice 1s infinite;
+        }
+
+        @keyframes pulse-voice {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+            }
+        }
+
+        .map-selection {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .map-selection label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .map-options {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .map-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .map-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #00B8D4;
+        }
+
+        .map-option span {
+            font-size: 15px;
+            color: #333;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="event-1024-container">
+            <span class="event-1024">1024 程序员节</span>
+        </div>
         <h1>🗺️ AI地图导航助手</h1>
         <p class="subtitle">通过自然语言描述你的导航需求，AI会自动为你打开高德地图</p>
 
@@ -235,16 +357,28 @@
             <div class="input-wrapper">
                 <textarea
                     id="userInput"
-                    placeholder="例如：从北京南站到故宫，或点击麦克风语音输入"
+                    placeholder="例如：从北京南站到故宫"
                     rows="3"
-                    style="padding-right: 60px;"
                 ></textarea>
-                <button class="voice-btn" id="voiceBtn" type="button" title="点击开始语音输入">
+                <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="语音输入">
                     🎤
                 </button>
             </div>
-            <div id="voiceStatus" style="font-size: 12px; margin-top: 5px; color: #667eea; min-height: 18px;"></div>
-            <div id="locationStatus" style="font-size: 12px; margin-top: 3px; color: #666;"></div>
+            <div id="locationStatus" style="font-size: 12px; margin-top: 8px; color: #666;"></div>
+        </div>
+
+        <div class="map-selection">
+            <label>选择地图服务：</label>
+            <div class="map-options">
+                <label class="map-option">
+                    <input type="radio" name="mapProvider" value="amap" checked>
+                    <span>高德地图</span>
+                </label>
+                <label class="map-option">
+                    <input type="radio" name="mapProvider" value="baidu">
+                    <span>百度地图</span>
+                </label>
+            </div>
         </div>
 
         <button id="navigateBtn" onclick="startNavigation()">
@@ -252,6 +386,10 @@
         </button>
 
         <div id="status" class="status"></div>
+
+        <div class="footer">
+            Powered by 七牛云 AI | 1024 程序员节特别项目
+        </div>
     </div>
 
     <script>
@@ -259,108 +397,7 @@
         let recognition = null;
         let isListening = false;
 
-        // 初始化语音识别
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-                console.log('浏览器不支持语音识别');
-                document.getElementById('voiceBtn').style.display = 'none';
-                return false;
-            }
-
-            recognition = new SpeechRecognition();
-            recognition.lang = 'zh-CN';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onstart = () => {
-                isListening = true;
-                const voiceBtn = document.getElementById('voiceBtn');
-                const voiceStatus = document.getElementById('voiceStatus');
-                voiceBtn.classList.add('listening');
-                voiceStatus.textContent = '🎤 正在聆听...请说出导航需求';
-                voiceStatus.style.color = '#dc3545';
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                console.log('语音识别结果:', transcript);
-                document.getElementById('userInput').value = transcript;
-                document.getElementById('voiceStatus').textContent = `✅ 识别成功: ${transcript}`;
-                document.getElementById('voiceStatus').style.color = '#28a745';
-
-                // 语音识别成功后自动开始导航
-                setTimeout(() => {
-                    startNavigation();
-                }, 500);
-            };
-
-            recognition.onerror = (event) => {
-                console.error('语音识别错误:', event.error);
-                const voiceStatus = document.getElementById('voiceStatus');
-                let errorMsg = '语音识别出错';
-
-                switch(event.error) {
-                    case 'no-speech':
-                        errorMsg = '⚠️ 未检测到语音，请重试';
-                        break;
-                    case 'audio-capture':
-                        errorMsg = '⚠️ 无法访问麦克风';
-                        break;
-                    case 'not-allowed':
-                        errorMsg = '⚠️ 麦克风权限被拒绝';
-                        break;
-                    default:
-                        errorMsg = `⚠️ ${event.error}`;
-                }
-
-                voiceStatus.textContent = errorMsg;
-                voiceStatus.style.color = '#dc3545';
-            };
-
-            recognition.onend = () => {
-                isListening = false;
-                const voiceBtn = document.getElementById('voiceBtn');
-                voiceBtn.classList.remove('listening');
-
-                // 3秒后清除状态消息
-                setTimeout(() => {
-                    const voiceStatus = document.getElementById('voiceStatus');
-                    if (!isListening) {
-                        voiceStatus.textContent = '';
-                    }
-                }, 3000);
-            };
-
-            return true;
-        }
-
-        // 切换语音识别
-        function toggleVoiceRecognition() {
-            if (!recognition) {
-                alert('您的浏览器不支持语音识别功能，请使用 Chrome、Edge 或 Safari 浏览器');
-                return;
-            }
-
-            if (isListening) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch (error) {
-                    console.error('启动语音识别失败:', error);
-                }
-            }
-        }
-
         window.addEventListener('load', () => {
-            // 初始化语音识别
-            initSpeechRecognition();
-
-            // 绑定语音按钮点击事件
-            document.getElementById('voiceBtn').addEventListener('click', toggleVoiceRecognition);
             const locationStatus = document.getElementById('locationStatus');
 
             if (navigator.geolocation) {
@@ -399,11 +436,18 @@
                 return;
             }
 
+            const mapProvider = document.querySelector('input[name="mapProvider"]:checked').value;
+
+            if (mapProvider === 'baidu') {
+                showStatus('❌ 百度地图功能开发中，敬请期待！请先选择高德地图', 'error');
+                return;
+            }
+
             button.disabled = true;
             showStatus('正在理解你的需求...', 'loading');
 
             try {
-                const requestBody = { input };
+                const requestBody = { input, mapProvider };
                 if (userLocation) {
                     requestBody.userLocation = userLocation;
                 }
@@ -447,6 +491,61 @@
                 startNavigation();
             }
         });
+
+        function toggleVoiceInput() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const userInput = document.getElementById('userInput');
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showStatus('⚠️ 您的浏览器不支持语音识别功能，请使用Chrome浏览器', 'error');
+                return;
+            }
+
+            if (isListening) {
+                if (recognition) {
+                    recognition.stop();
+                }
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                showStatus('🎤 正在聆听...请说话', 'loading');
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                showStatus('✅ 识别成功：' + transcript, 'success');
+            };
+
+            recognition.onerror = function(event) {
+                let errorMsg = '语音识别出错';
+                if (event.error === 'no-speech') {
+                    errorMsg = '未检测到语音，请重试';
+                } else if (event.error === 'network') {
+                    errorMsg = '网络错误，请检查网络连接';
+                } else if (event.error === 'not-allowed') {
+                    errorMsg = '未授权麦克风权限，请在浏览器设置中允许';
+                }
+                showStatus('❌ ' + errorMsg, 'error');
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+            };
+
+            recognition.start();
+        }
     </script>
 </body>
 </html>
+
