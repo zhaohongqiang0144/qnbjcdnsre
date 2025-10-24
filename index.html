@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI地图导航助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .examples {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .examples h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .examples ul {
+            list-style: none;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .examples li {
+            padding: 5px 0;
+        }
+
+        .examples li:before {
+            content: "💬 ";
+            margin-right: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status-icon {
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ AI地图导航助手</h1>
+        <p class="subtitle">通过自然语言描述你的导航需求，AI会自动为你打开高德地图</p>
+
+        <div class="examples">
+            <h3>💡 输入示例：</h3>
+            <ul>
+                <li>从北京到上海</li>
+                <li>帮我导航从天安门到鸟巢</li>
+                <li>去故宫（自动使用当前位置作为起点）</li>
+                <li>到西湖（自动定位）</li>
+            </ul>
+        </div>
+
+        <div class="input-group">
+            <label for="userInput">请输入导航需求：</label>
+            <textarea
+                id="userInput"
+                placeholder="例如：从北京南站到故宫"
+                rows="3"
+            ></textarea>
+            <div id="locationStatus" style="font-size: 12px; margin-top: 8px; color: #666;"></div>
+        </div>
+
+        <button id="navigateBtn" onclick="startNavigation()">
+            开始导航
+        </button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        let userLocation = null;
+
+        window.addEventListener('load', () => {
+            const locationStatus = document.getElementById('locationStatus');
+
+            if (navigator.geolocation) {
+                locationStatus.innerHTML = '📍 正在获取您的位置...';
+                locationStatus.style.color = '#856404';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lng: position.coords.longitude,
+                            lat: position.coords.latitude
+                        };
+                        console.log('已获取用户位置:', userLocation);
+                        locationStatus.innerHTML = '✅ 已获取位置，可以使用"去xxx"快速导航';
+                        locationStatus.style.color = '#155724';
+                    },
+                    (error) => {
+                        console.log('无法获取位置:', error.message);
+                        locationStatus.innerHTML = '⚠️ 未获取到位置权限，请在输入中明确指定起点';
+                        locationStatus.style.color = '#721c24';
+                    }
+                );
+            } else {
+                locationStatus.innerHTML = '⚠️ 浏览器不支持地理定位，请明确指定起点';
+                locationStatus.style.color = '#721c24';
+            }
+        });
+
+        async function startNavigation() {
+            const input = document.getElementById('userInput').value.trim();
+            const statusDiv = document.getElementById('status');
+            const button = document.getElementById('navigateBtn');
+
+            if (!input) {
+                showStatus('请输入导航需求', 'error');
+                return;
+            }
+
+            button.disabled = true;
+            showStatus('正在理解你的需求...', 'loading');
+
+            try {
+                const requestBody = { input };
+                if (userLocation) {
+                    requestBody.userLocation = userLocation;
+                }
+
+                const response = await fetch('/api/navigate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const displayMessage = `✅ 导航已启动！<br><strong>起点：</strong>${data.from}<br><strong>终点：</strong>${data.to}`;
+                    showStatus(displayMessage, 'success');
+                } else {
+                    showStatus('❌ ' + (data.error || '操作失败，请重试'), 'error');
+                }
+            } catch (error) {
+                showStatus('❌ 网络错误：' + error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status show ' + type;
+
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<div class="loading-spinner"></div> ${message}`;
+            } else {
+                statusDiv.innerHTML = message;
+            }
+        }
+
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                startNavigation();
+            }
+        });
+    </script>
+</body>
+</html>
