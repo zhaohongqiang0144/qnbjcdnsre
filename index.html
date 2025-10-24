@@ -48,6 +48,45 @@
             margin-bottom: 20px;
         }
 
+        .input-wrapper {
+            position: relative;
+        }
+
+        .voice-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .voice-btn:hover {
+            background: #764ba2;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .voice-btn.listening {
+            background: #dc3545;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.15); }
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -193,12 +232,19 @@
 
         <div class="input-group">
             <label for="userInput">请输入导航需求：</label>
-            <textarea
-                id="userInput"
-                placeholder="例如：从北京南站到故宫"
-                rows="3"
-            ></textarea>
-            <div id="locationStatus" style="font-size: 12px; margin-top: 8px; color: #666;"></div>
+            <div class="input-wrapper">
+                <textarea
+                    id="userInput"
+                    placeholder="例如：从北京南站到故宫，或点击麦克风语音输入"
+                    rows="3"
+                    style="padding-right: 60px;"
+                ></textarea>
+                <button class="voice-btn" id="voiceBtn" type="button" title="点击开始语音输入">
+                    🎤
+                </button>
+            </div>
+            <div id="voiceStatus" style="font-size: 12px; margin-top: 5px; color: #667eea; min-height: 18px;"></div>
+            <div id="locationStatus" style="font-size: 12px; margin-top: 3px; color: #666;"></div>
         </div>
 
         <button id="navigateBtn" onclick="startNavigation()">
@@ -210,8 +256,111 @@
 
     <script>
         let userLocation = null;
+        let recognition = null;
+        let isListening = false;
+
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                console.log('浏览器不支持语音识别');
+                document.getElementById('voiceBtn').style.display = 'none';
+                return false;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isListening = true;
+                const voiceBtn = document.getElementById('voiceBtn');
+                const voiceStatus = document.getElementById('voiceStatus');
+                voiceBtn.classList.add('listening');
+                voiceStatus.textContent = '🎤 正在聆听...请说出导航需求';
+                voiceStatus.style.color = '#dc3545';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('语音识别结果:', transcript);
+                document.getElementById('userInput').value = transcript;
+                document.getElementById('voiceStatus').textContent = `✅ 识别成功: ${transcript}`;
+                document.getElementById('voiceStatus').style.color = '#28a745';
+
+                // 语音识别成功后自动开始导航
+                setTimeout(() => {
+                    startNavigation();
+                }, 500);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                const voiceStatus = document.getElementById('voiceStatus');
+                let errorMsg = '语音识别出错';
+
+                switch(event.error) {
+                    case 'no-speech':
+                        errorMsg = '⚠️ 未检测到语音，请重试';
+                        break;
+                    case 'audio-capture':
+                        errorMsg = '⚠️ 无法访问麦克风';
+                        break;
+                    case 'not-allowed':
+                        errorMsg = '⚠️ 麦克风权限被拒绝';
+                        break;
+                    default:
+                        errorMsg = `⚠️ ${event.error}`;
+                }
+
+                voiceStatus.textContent = errorMsg;
+                voiceStatus.style.color = '#dc3545';
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                const voiceBtn = document.getElementById('voiceBtn');
+                voiceBtn.classList.remove('listening');
+
+                // 3秒后清除状态消息
+                setTimeout(() => {
+                    const voiceStatus = document.getElementById('voiceStatus');
+                    if (!isListening) {
+                        voiceStatus.textContent = '';
+                    }
+                }, 3000);
+            };
+
+            return true;
+        }
+
+        // 切换语音识别
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                alert('您的浏览器不支持语音识别功能，请使用 Chrome、Edge 或 Safari 浏览器');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('启动语音识别失败:', error);
+                }
+            }
+        }
 
         window.addEventListener('load', () => {
+            // 初始化语音识别
+            initSpeechRecognition();
+
+            // 绑定语音按钮点击事件
+            document.getElementById('voiceBtn').addEventListener('click', toggleVoiceRecognition);
             const locationStatus = document.getElementById('locationStatus');
 
             if (navigator.geolocation) {

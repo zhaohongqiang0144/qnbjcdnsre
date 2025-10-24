@@ -2,7 +2,7 @@
 > map-navigator@1.0.0 start
 > node server.js
 
-[dotenv@17.2.3] injecting env (4) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ⚙️  enable debug logging with { debug: true }
 ✅ Anthropic client initialized
 Amap Maps MCP Server running on stdio
 ✅ MCP Client connected to AMap MCP Server
@@ -27,3 +27,19 @@ Available AMap MCP tools: maps_regeocode, maps_geo, maps_ip_location, maps_weath
   address: '黄浦区'
 }
 打开URL: https://www.amap.com/dir?dateTime=now&from[adcode]=undefined&from[id]=&from[lnglat]=116.407387,39.904179&from[modxy]=116.407387,39.904179&from[name]=北京市&from[poitype]=&to[adcode]=undefined&to[id]=&to[lnglat]=121.473667,31.230525&to[modxy]=121.473667,31.230525&to[name]=上海市&to[poitype]=&policy=1&type=car
+提取的地点: { from: null, to: '邯郸' }
+使用用户当前位置作为起点: { lng: 116.45320061485877, lat: 39.948457457656886 }
+正在搜索终点信息...
+起点信息: {
+  name: '北京市朝阳区左家庄街道新源南路9号新源南路小区',
+  location: '116.45320061485877,39.948457457656886',
+  adcode: '110105',
+  address: '北京市朝阳区左家庄街道新源南路9号新源南路小区'
+}
+终点信息: {
+  name: '邯郸市',
+  location: '114.53915,36.625849',
+  adcode: undefined,
+  address: '丛台区'
+}
+打开URL: https://www.amap.com/dir?dateTime=now&from[adcode]=110105&from[id]=&from[lnglat]=116.45320061485877,39.948457457656886&from[modxy]=116.45320061485877,39.948457457656886&from[name]=北京市朝阳区左家庄街道新源南路9号新源南路小区&from[poitype]=&to[adcode]=undefined&to[id]=&to[lnglat]=114.53915,36.625849&to[modxy]=114.53915,36.625849&to[name]=邯郸市&to[poitype]=&policy=1&type=car
