@@ -5,6 +5,11 @@ const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
 const path = require('path');
 const { exec } = require('child_process');
+const WebSocket = require('ws');
+const CryptoJS = require('crypto-js');
+const multer = require('multer');
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 const PORT = 3000;
@@ -147,7 +152,7 @@ async function searchLocation(keyword) {
 }
 
 app.post('/api/navigate', async (req, res) => {
-    const { input, userLocation } = req.body;
+    const { input, userLocation, mapProvider = 'amap' } = req.body;
 
     if (!input) {
         return res.status(400).json({ success: false, error: '请输入导航需求' });
@@ -238,6 +243,103 @@ app.post('/api/navigate', async (req, res) => {
             success: false,
             error: error.message || '处理请求时出错'
         });
+    }
+});
+
+function getXfyunAuthUrl() {
+    const APPID = process.env.XFYUN_APPID;
+    const API_KEY = process.env.XFYUN_API_KEY;
+    const API_SECRET = process.env.XFYUN_API_SECRET;
+
+    const host = 'iat-api.xfyun.cn';
+    const date = new Date().toUTCString();
+    const algorithm = 'hmac-sha256';
+    const headers = 'host date request-line';
+    const signatureOrigin = `host: ${host}\ndate: ${date}\nGET /v2/iat HTTP/1.1`;
+
+    const signatureSha = CryptoJS.HmacSHA256(signatureOrigin, API_SECRET);
+    const signature = CryptoJS.enc.Base64.stringify(signatureSha);
+
+    const authorizationOrigin = `api_key="${API_KEY}", algorithm="${algorithm}", headers="${headers}", signature="${signature}"`;
+    const authorization = Buffer.from(authorizationOrigin).toString('base64');
+
+    return `wss://${host}/v2/iat?authorization=${authorization}&date=${encodeURIComponent(date)}&host=${host}`;
+}
+
+app.post('/api/speech-to-text', upload.single('audio'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: '未接收到音频文件' });
+        }
+
+        const audioBuffer = req.file.buffer;
+        const wsUrl = getXfyunAuthUrl();
+        const ws = new WebSocket(wsUrl);
+
+        let result = '';
+        let hasError = false;
+
+        ws.on('open', () => {
+            const params = {
+                common: {
+                    app_id: process.env.XFYUN_APPID
+                },
+                business: {
+                    language: 'zh_cn',
+                    domain: 'iat',
+                    accent: 'mandarin',
+                    vad_eos: 5000,
+                    dwa: 'wpgs'
+                },
+                data: {
+                    status: 2,
+                    format: 'audio/L16;rate=16000',
+                    encoding: 'raw',
+                    audio: audioBuffer.toString('base64')
+                }
+            };
+
+            ws.send(JSON.stringify(params));
+        });
+
+        ws.on('message', (message) => {
+            const data = JSON.parse(message);
+
+            if (data.code !== 0) {
+                console.error('讯飞识别错误:', data.message);
+                hasError = true;
+                ws.close();
+                return;
+            }
+
+            if (data.data && data.data.result) {
+                const texts = data.data.result.ws.map(word =>
+                    word.cw.map(c => c.w).join('')
+                ).join('');
+                result += texts;
+            }
+
+            if (data.data && data.data.status === 2) {
+                ws.close();
+            }
+        });
+
+        ws.on('close', () => {
+            if (hasError) {
+                res.status(500).json({ success: false, error: '语音识别失败' });
+            } else {
+                res.json({ success: true, text: result || '' });
+            }
+        });
+
+        ws.on('error', (error) => {
+            console.error('WebSocket错误:', error);
+            res.status(500).json({ success: false, error: '连接语音服务失败' });
+        });
+
+    } catch (error) {
+        console.error('语音识别错误:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
