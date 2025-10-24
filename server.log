@@ -1,0 +1,29 @@
+
+> map-navigator@1.0.0 start
+> node server.js
+
+[dotenv@17.2.3] injecting env (4) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+✅ Anthropic client initialized
+Amap Maps MCP Server running on stdio
+✅ MCP Client connected to AMap MCP Server
+Available AMap MCP tools: maps_regeocode, maps_geo, maps_ip_location, maps_weather, maps_search_detail, maps_bicycling, maps_direction_walking, maps_direction_driving, maps_direction_transit_integrated, maps_distance, maps_text_search, maps_around_search
+
+🚀 Server running at http://localhost:3000
+📍 Open this URL in your browser to start navigating!
+
+提取的地点: { from: '北京', to: '上海' }
+正在搜索起点信息...
+正在搜索终点信息...
+起点信息: {
+  name: '北京市',
+  location: '116.407387,39.904179',
+  adcode: undefined,
+  address: '东城区'
+}
+终点信息: {
+  name: '上海市',
+  location: '121.473667,31.230525',
+  adcode: undefined,
+  address: '黄浦区'
+}
+打开URL: https://www.amap.com/dir?dateTime=now&from[adcode]=undefined&from[id]=&from[lnglat]=116.407387,39.904179&from[modxy]=116.407387,39.904179&from[name]=北京市&from[poitype]=&to[adcode]=undefined&to[id]=&to[lnglat]=121.473667,31.230525&to[modxy]=121.473667,31.230525&to[name]=上海市&to[poitype]=&policy=1&type=car
