@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -492,60 +491,155 @@
             }
         });
 
-        function toggleVoiceInput() {
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioContext = null;
+        let recordingTimeout = null;
+
+        async function toggleVoiceInput() {
             const voiceBtn = document.getElementById('voiceBtn');
             const userInput = document.getElementById('userInput');
 
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                showStatus('⚠️ 您的浏览器不支持语音识别功能，请使用Chrome浏览器', 'error');
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus('⚠️ 您的浏览器不支持录音功能', 'error');
                 return;
             }
 
             if (isListening) {
-                if (recognition) {
-                    recognition.stop();
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+                if (recordingTimeout) {
+                    clearTimeout(recordingTimeout);
                 }
                 return;
             }
 
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'zh-CN';
-            recognition.continuous = false;
-            recognition.interimResults = false;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            recognition.onstart = function() {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(stream);
+                const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                audioChunks = [];
+
+                processor.onaudioprocess = (e) => {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    audioChunks.push(new Float32Array(inputData));
+                };
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
                 isListening = true;
                 voiceBtn.classList.add('listening');
-                showStatus('🎤 正在聆听...请说话', 'loading');
-            };
+                showStatus('🎤 正在聆听...请说话 (最长5秒)', 'loading');
 
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                userInput.value = transcript;
-                showStatus('✅ 识别成功：' + transcript, 'success');
-            };
+                recordingTimeout = setTimeout(async () => {
+                    if (isListening) {
+                        processor.disconnect();
+                        source.disconnect();
+                        stream.getTracks().forEach(track => track.stop());
+                        await sendAudioToServer();
+                    }
+                }, 5000);
 
-            recognition.onerror = function(event) {
-                let errorMsg = '语音识别出错';
-                if (event.error === 'no-speech') {
-                    errorMsg = '未检测到语音，请重试';
-                } else if (event.error === 'network') {
-                    errorMsg = '网络错误，请检查网络连接';
-                } else if (event.error === 'not-allowed') {
-                    errorMsg = '未授权麦克风权限，请在浏览器设置中允许';
+                voiceBtn.onclick = async () => {
+                    if (isListening) {
+                        processor.disconnect();
+                        source.disconnect();
+                        stream.getTracks().forEach(track => track.stop());
+                        if (recordingTimeout) {
+                            clearTimeout(recordingTimeout);
+                        }
+                        await sendAudioToServer();
+                    }
+                };
+
+            } catch (error) {
+                console.error('录音错误:', error);
+                if (error.name === 'NotAllowedError') {
+                    showStatus('❌ 未授权麦克风权限，请在浏览器设置中允许', 'error');
+                } else {
+                    showStatus('❌ 录音失败: ' + error.message, 'error');
                 }
-                showStatus('❌ ' + errorMsg, 'error');
-            };
-
-            recognition.onend = function() {
                 isListening = false;
                 voiceBtn.classList.remove('listening');
-            };
+            }
+        }
 
-            recognition.start();
+        async function sendAudioToServer() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const userInput = document.getElementById('userInput');
+
+            isListening = false;
+            voiceBtn.classList.remove('listening');
+            voiceBtn.onclick = () => toggleVoiceInput();
+
+            if (audioChunks.length === 0) {
+                showStatus('❌ 未检测到音频', 'error');
+                return;
+            }
+
+            showStatus('🔄 正在识别中...', 'loading');
+
+            let totalLength = 0;
+            audioChunks.forEach(chunk => totalLength += chunk.length);
+
+            const floatData = new Float32Array(totalLength);
+            let offset = 0;
+            audioChunks.forEach(chunk => {
+                floatData.set(chunk, offset);
+                offset += chunk.length;
+            });
+
+            const sampleRate = audioContext.sampleRate;
+            const targetSampleRate = 16000;
+            const ratio = sampleRate / targetSampleRate;
+            const newLength = Math.floor(floatData.length / ratio);
+            const resampledData = new Float32Array(newLength);
+
+            for (let i = 0; i < newLength; i++) {
+                const index = Math.floor(i * ratio);
+                resampledData[i] = floatData[index];
+            }
+
+            const pcmData = new Int16Array(resampledData.length);
+            for (let i = 0; i < resampledData.length; i++) {
+                pcmData[i] = Math.max(-32768, Math.min(32767, Math.floor(resampledData[i] * 32768)));
+            }
+
+            const audioBlob = new Blob([pcmData.buffer], { type: 'audio/raw' });
+
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'audio.raw');
+
+            try {
+                const response = await fetch('/api/speech-to-text', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.text) {
+                    userInput.value = result.text;
+                    showStatus('✅ 识别成功：' + result.text, 'success');
+                } else {
+                    showStatus('❌ ' + (result.error || '识别失败'), 'error');
+                }
+            } catch (error) {
+                console.error('发送音频错误:', error);
+                showStatus('❌ 网络错误: ' + error.message, 'error');
+            }
+
+            audioChunks = [];
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
         }
     </script>
 </body>
 </html>
-
