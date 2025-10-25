@@ -339,7 +339,7 @@
             <span class="event-1024">1024 程序员节</span>
         </div>
         <h1>🗺️ AI地图导航助手</h1>
-        <p class="subtitle">通过自然语言描述你的导航需求，AI会自动为你打开高德地图</p>
+        <p class="subtitle">通过自然语言或语音描述你的导航需求，AI会自动为你打开地图导航</p>
 
         <div class="examples">
             <h3>💡 输入示例：</h3>
@@ -435,21 +435,25 @@
                 return;
             }
 
+            // 获取选中的地图类型（后端期望 mapProvider 参数）
             const mapProvider = document.querySelector('input[name="mapProvider"]:checked').value;
+            const mapName = mapProvider === 'amap' ? '高德地图' : '百度地图';
 
-            if (mapProvider === 'baidu') {
-                showStatus('❌ 百度地图功能开发中，敬请期待！请先选择高德地图', 'error');
-                return;
-            }
+            console.log('选中的地图类型:', mapProvider, '地图名称:', mapName);
 
             button.disabled = true;
-            showStatus('正在理解你的需求...', 'loading');
+            showStatus(`正在理解你的需求，准备使用${mapName}...`, 'loading');
 
             try {
-                const requestBody = { input, mapProvider };
+                const requestBody = {
+                    input,
+                    mapProvider  // 后端期望的参数名
+                };
                 if (userLocation) {
                     requestBody.userLocation = userLocation;
                 }
+
+                console.log('发送请求体:', requestBody);
 
                 const response = await fetch('/api/navigate', {
                     method: 'POST',
@@ -462,7 +466,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    const displayMessage = `✅ 导航已启动！<br><strong>起点：</strong>${data.from}<br><strong>终点：</strong>${data.to}`;
+                    const displayMessage = `✅ ${data.map || mapName}导航已启动！<br><strong>起点：</strong>${data.from}<br><strong>终点：</strong>${data.to}`;
                     showStatus(displayMessage, 'success');
                 } else {
                     showStatus('❌ ' + (data.error || '操作失败，请重试'), 'error');
