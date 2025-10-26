@@ -24,7 +24,7 @@
 ### 1. 克隆项目并安装依赖
 
 ```bash
-npm install
+npm install 
 ```
 
 ### 2. 配置 API 密钥
@@ -54,7 +54,7 @@ XFYUN_API_SECRET=your_xfyun_api_secret
 ### 3. 启动服务
 
 ```bash
-npm start
+nohup npm start > server.log 2>&1 & 
 ```
 
 ### 4. 打开浏览器
@@ -395,8 +395,25 @@ npm run dev  # 使用 nodemon 自动重启
 - ✅ 浏览器定位
 
 ## 🤝 贡献
+zhangaibing (后端架构 + 高德地图)：
+  - 负责整体服务器架构设计
+  - AI服务集成和自然语言理解
+  - 高德地图API兼容和优化
+  - 语音识别服务管理
 
-欢迎提交 Issue 和 Pull Request！
+  niuyihang (百度地图功能)：
+  - 百度地图API集成和配置
+  - 百度地图地点搜索和路线规划
+  - 坐标转换算法实现
+  - 百度地图错误处理优化
+
+  zhaohongqiang (前端页面)：
+  - 用户界面设计和交互优化
+  - 位置获取和权限管理
+  - 语音录制和音频处理
+  - 响应式布局和移动端适配
+## demo_url
+https://b23.tv/4Z1l1Nd
 
 ## 📄 许可证
 
